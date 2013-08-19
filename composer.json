@@ -13,7 +13,7 @@
     },
     "description": "PHP OAuth 2.0 Client",
     "license": "LGPL-3.0+",
-    "name": "fkooman/php-oauth-client",
+    "name": "cloudvox/php-oauth-client",
     "require": {
         "ext-openssl": "*",
         "guzzle/guzzle": ">=v3.7.0",
