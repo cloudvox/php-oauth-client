@@ -6,6 +6,12 @@
             "role": "Developer"
         }
     ],
+    "repositories":[
+        {
+            "type":"git",
+            "url":"git@github.com:cloudvox/php-oauth-client"
+        }
+    ],
     "autoload": {
         "psr-0": {
             "fkooman\\OAuth\\Client": "src/"
