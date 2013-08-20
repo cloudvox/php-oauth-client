@@ -6,12 +6,6 @@
             "role": "Developer"
         }
     ],
-    "repositories":[
-        {
-            "type":"git",
-            "url":"git@github.com:cloudvox/php-oauth-client"
-        }
-    ],
     "autoload": {
         "psr-0": {
             "fkooman\\OAuth\\Client": "src/"
@@ -19,7 +13,7 @@
     },
     "description": "PHP OAuth 2.0 Client",
     "license": "LGPL-3.0+",
-    "name": "cloudvox/php-oauth-client",
+    "name": "fkooman/php-oauth-client",
     "require": {
         "ext-openssl": "*",
         "guzzle/guzzle": ">=v3.7.0",
