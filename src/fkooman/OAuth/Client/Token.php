@@ -19,16 +19,16 @@ namespace fkooman\OAuth\Client;
 
 class Token
 {
-    /** client_config_id VARCHAR(255) NOT NULL */
+    /** @var string */
     private $clientConfigId;
 
-    /** user_id VARCHAR(255) NOT NULL */
+    /** @var string */
     private $userId;
 
-    /** scope VARCHAR(255) NOT NULL */
+    /** @var Scope | null */
     private $scope;
 
-    /** issue_time INTEGER NOT NULL */
+    /** @var int */
     private $issueTime;
 
     public function __construct(array $data)
@@ -70,29 +70,14 @@ class Token
         return $this->userId;
     }
 
-    public function setScope($scope)
+    public function setScope(Scope $scope)
     {
-        if (!is_string($scope)) {
-            throw new TokenException("scope needs to be string");
-        }
-        self::validateScope($scope);
-        $this->scope = self::normalizeScope($scope);
+        $this->scope = $scope;
     }
 
     public function getScope()
     {
         return $this->scope;
-    }
-
-    public function hasScope($scope)
-    {
-        if (!is_string($scope)) {
-            throw new TokenException("scope needs to be string");
-        }
-        self::validateScope($scope);
-        $requestScope = self::normalizeScope($scope);
-
-        return $this->scope === $requestScope;
     }
 
     public function setIssueTime($issueTime)
@@ -109,21 +94,4 @@ class Token
         return $this->issueTime;
     }
 
-    private static function validateScope($scope)
-    {
-        $scopeTokenRegExp = '(?:\x21|[\x23-\x5B]|[\x5D-\x7E])+';
-        $scopeRegExp = sprintf('/^%s(?: %s)*$/', $scopeTokenRegExp, $scopeTokenRegExp);
-        $result = preg_match($scopeRegExp, $scope);
-        if (1 !== $result) {
-            throw new TokenException(sprintf("invalid scope '%s'", $scope));
-        }
-    }
-
-    private function normalizeScope($scope)
-    {
-        $explodedScope = explode(" ", $scope);
-        sort($explodedScope, SORT_STRING);
-
-        return implode(" ", array_values(array_unique($explodedScope, SORT_STRING)));
-    }
 }

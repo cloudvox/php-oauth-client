@@ -31,6 +31,8 @@ interface ClientConfigInterface
     public function getRedirectUri();
     public function setCredentialsInRequestBody($credentialsInRequestBody);
     public function getCredentialsInRequestBody();
+    public function setDefaultTokenType($defaultTokenType);
+    public function getDefaultTokenType();
     public function setEnableDebug($enableDebug);
     public function getEnableDebug();
 }

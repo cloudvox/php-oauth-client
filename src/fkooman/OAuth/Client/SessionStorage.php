@@ -12,7 +12,7 @@ class SessionStorage implements StorageInterface
         }
     }
 
-    public function getAccessToken($clientConfigId, $userId, $scope)
+    public function getAccessToken($clientConfigId, Context $context)
     {
         if (!isset($_SESSION['php-oauth-client']['access_token'])) {
             return false;
@@ -23,10 +23,10 @@ class SessionStorage implements StorageInterface
             if ($clientConfigId !== $token->getClientConfigId()) {
                 continue;
             }
-            if ($userId !== $token->getUserId()) {
+            if ($context->getUserId() !== $token->getUserId()) {
                 continue;
             }
-            if (!$token->hasScope($scope)) {
+            if (!$token->getScope()->hasScope($context->getScope())) {
                 continue;
             }
 
@@ -66,7 +66,7 @@ class SessionStorage implements StorageInterface
         return false;
     }
 
-    public function getRefreshToken($clientConfigId, $userId, $scope)
+    public function getRefreshToken($clientConfigId, Context $context)
     {
         if (!isset($_SESSION['php-oauth-client']['refresh_token'])) {
             return false;
@@ -77,10 +77,10 @@ class SessionStorage implements StorageInterface
             if ($clientConfigId !== $token->getClientConfigId()) {
                 continue;
             }
-            if ($userId !== $token->getUserId()) {
+            if ($context->getUserId() !== $token->getUserId()) {
                 continue;
             }
-            if (!$token->hasScope($scope)) {
+            if (!$token->getScope()->hasScope($context->getScope())) {
                 continue;
             }
 
@@ -153,7 +153,7 @@ class SessionStorage implements StorageInterface
         return true;
     }
 
-    public function deleteStateForUser($clientConfigId, $userId)
+    public function deleteStateForContext($clientConfigId, Context $context)
     {
         if (!isset($_SESSION['php-oauth-client']['state'])) {
             return false;
@@ -164,7 +164,7 @@ class SessionStorage implements StorageInterface
             if ($clientConfigId !== $sessionState->getClientConfigId()) {
                 continue;
             }
-            if ($userId !== $sessionState->getUserId()) {
+            if ($context->getUserId() !== $sessionState->getUserId()) {
                 continue;
             }
             unset($_SESSION['php-oauth-client']['state'][$k]);
