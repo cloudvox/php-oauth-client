@@ -120,7 +120,7 @@ Before you can call these methods you need to create a `Context` object to
 specify for which user you are requesting this access token and what the scope 
 is you want to request at the authorization server.
 
-    $context = new Context("john.doe@example.org", array("read"));
+    $context = new Context("john.doe@example.org", new Scope("read"));
     
 This means that you will request a token bound to `john.doe@example.org` with 
 the scope `read`. The user you specify here is typically the user identifier 
@@ -128,7 +128,8 @@ you use in *your* application that wants to integrate with the OAuth 2.0
 protected resource. At your service the user can for example be 
 `john.doe@example.org`. This identifier is in no way related to the identity
 of the user at the remote service, it is just used for book keeping the 
-access tokens.
+access tokens. If you do not want to request any particular scope you can use
+`new Scope()`.
 
 Now you can see if an access token is already available:
 
@@ -244,3 +245,33 @@ to specify other databases.
 
 Please note that if you use SQLite, please note that the *directory* you write 
 the file to needs to be writable to the web server as well!
+
+# Logging
+In order to log all the requests the OAuth library makes to the token endpoint
+it is possible to use e.g. the Monolog adapter for this. Below is an example 
+on how to do this. For production systems you may want to integrate with your
+own logging framework, set the appropriate log level, e.g. only log on errors.
+
+So instead of just using
+
+    new Client()
+
+You can use the following snippet:
+
+    use Monolog\Logger;
+    use Monolog\Handler\StreamHandler;
+
+    use Guzzle\Plugin\Log\LogPlugin;
+    use Guzzle\Log\MessageFormatter;
+    use Guzzle\Log\MonologLogAdapter;
+
+    /* create the log channel */
+    $log = new Logger('my-app');
+    $log->pushHandler(new StreamHandler(sprintf("%s/data/client.log", __DIR__), Logger::DEBUG));
+    $logPlugin = new LogPlugin(new MonologLogAdapter($log), MessageFormatter::DEBUG_FORMAT);
+
+    $httpClient = new Client();
+    $httpClient->addSubscriber($logPlugin);
+
+Now you can feed the `$httpClient` to the `Api` and `Callback` classes and the
+requests and responses including their bodies will be logged.

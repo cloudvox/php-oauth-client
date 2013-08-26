@@ -27,40 +27,38 @@ class TokenResponse
     private $scope;
     private $responseBody;
 
-    public function __construct($accessToken, $tokenType)
-    {
-        $this->setAccessToken($accessToken);
-        $this->setTokenType($tokenType);
-        $this->setExpiresIn(null);
-        $this->setRefreshToken(null);
-        $this->setScope(null);
-        $this->setResponseBody(null);
-    }
 
-    public static function fromArray(array $data)
+    public function __construct(array $data)
     {
         foreach (array('access_token') as $key) {
             if (!array_key_exists($key, $data)) {
                 throw new TokenResponseException(sprintf("missing field '%s'", $key));
             }
         }
-        $data['token_type'] = array_key_exists('token_type', $data) ? $data['token_type'] : self::DEFAULT_TOKEN_TYPE;
-        $t = new static($data['access_token'], $data['token_type']);
+        $this->setAccessToken($data['access_token']);
+        $this->setTokenType($data['token_type']);
+
+        $this->expiresIn = null;
+        $this->refreshToken = null;
+        $this->scope = null;
         if (array_key_exists('expires_in', $data)) {
-            $t->setExpiresIn($data['expires_in']);
+            $this->setExpiresIn($data['expires_in']);
         }
         if (array_key_exists('refresh_token', $data)) {
-            $t->setRefreshToken($data['refresh_token']);
+            $this->setRefreshToken($data['refresh_token']);
         }
         if (array_key_exists('scope', $data)) {
-            $t->setScope($data['scope']);
+            $this->setScope($data['scope']);
         }
-        $t->setResponseBody($data);
-        return $t;
+
+        $this->setResponseBody($data);
     }
 
     public function setAccessToken($accessToken)
     {
+        if (!is_string($accessToken) || 0 >= strlen($accessToken)) {
+            throw new TokenResponseException("access_token needs to be a non-empty string");
+        }
         $this->accessToken = $accessToken;
     }
 
@@ -71,6 +69,9 @@ class TokenResponse
 
     public function setTokenType($tokenType)
     {
+        if (!is_string($tokenType) || 0 >= strlen($tokenType)) {
+            throw new TokenResponseException("token_type needs to be a non-empty string");
+        }
         $this->tokenType = $tokenType;
     }
 
@@ -81,6 +82,9 @@ class TokenResponse
 
     public function setExpiresIn($expiresIn)
     {
+        if (!is_int($expiresIn) || 0 >= $expiresIn) {
+            throw new TokenResponseException("expires_in needs to be a positive integer");
+        }
         $this->expiresIn = $expiresIn;
     }
 
@@ -91,6 +95,9 @@ class TokenResponse
 
     public function setRefreshToken($refreshToken)
     {
+        if (!is_string($refreshToken) || 0 >= strlen($refreshToken)) {
+            throw new TokenResponseException("refresh_token needs to be a non-empty string");
+        }
         $this->refreshToken = $refreshToken;
     }
 
@@ -101,7 +108,10 @@ class TokenResponse
 
     public function setScope($scope)
     {
-        $this->scope = $scope;
+        if (!is_string($scope) || 0 >= strlen($scope)) {
+            throw new TokenResponseException("scope needs to be a non-empty string");
+        }
+        $this->scope = new Scope($scope);
     }
 
     public function getScope()

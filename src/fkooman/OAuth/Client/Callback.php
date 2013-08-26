@@ -76,6 +76,8 @@ class Callback
             throw new CallbackException("state not found");
         }
 
+        // avoid race condition for state by really needing a confirmation
+        // that it was deleted
         if (false === $this->tokenStorage->deleteState($state)) {
             throw new CallbackException("state already used");
         }
@@ -85,6 +87,7 @@ class Callback
         }
 
         if (null !== $qError) {
+            // FIXME: this should probably be CallbackException?
             throw new AuthorizeException($qError, $qErrorDescription);
         }
 
@@ -95,11 +98,20 @@ class Callback
                 throw new CallbackException("unable to fetch access token with authorization code");
             }
 
-            $this->tokenResponse = $tokenResponse->getResponsebody();
-
-            // if response contains a granted scope use that, if not we assume
-            // we got what we asked for, take it from the state object
-            $scope = (null !== $tokenResponse->getScope()) ? $tokenResponse->getScope() : $state->getScope();
+            if (null === $tokenResponse->getScope()) {
+                // no scope in response, we assume we got the requested scope
+                $scope = $state->getScope();
+            } else {
+                // the scope we got should be a superset of what we requested
+                $scope = $tokenResponse->getScope();
+                if (!$scope->hasScope($state->getScope())) {
+                    // we didn't get the scope we requested, stop for now
+                    // FIXME: we need to implement a way to request certain
+                    // scope as being optional, while others need to be
+                    // required
+                    throw new CallbackException("requested scope not obtained");
+                }
+            }
 
             // store the access token
             $accessToken = new AccessToken(
