@@ -70,6 +70,9 @@ class ClientConfigTest extends PHPUnit_Framework_TestCase
             array(
               array ("client_id" => "foo", "client_secret" => null, "authorize_endpoint" => "http://www.example.org/authorize", "token_endpoint" => "http://www.example.org/token"),
             ),
+            array(
+              array ("client_id" => "foo", "client_secret" => null, "authorize_endpoint" => "http://www.example.org/authorize", "token_endpoint" => "http://www.example.org/token", "default_token_token" => "bearer"),
+            ),
         );
     }
 
@@ -108,10 +111,6 @@ class ClientConfigTest extends PHPUnit_Framework_TestCase
                 array("client_id" => "foo", "client_secret" => "bar", "authorize_endpoint" => "http://www.example.org/authorize", "token_endpoint" => "http://www.example.org/token#foo"),
                 "uri must not contain a fragment"
             ),
-            //array(
-            //  array ("client_id" => "foo:abc", "client_secret" => "bar", "authorize_endpoint" => "http://www.example.org/authorize", "token_endpoint" => "http://www.example.org/token"),
-            //    "client_id and/or client_secret cannot contain colon ':'"
-            //),
             array(
               array ("client_id" => "foo", "client_secret" => "∑", "authorize_endpoint" => "http://www.example.org/authorize", "token_endpoint" => "http://www.example.org/token"),
                 "invalid characters in client_id or client_secret"
@@ -119,6 +118,10 @@ class ClientConfigTest extends PHPUnit_Framework_TestCase
             array(
               array ("client_id" => "foo", "client_secret" => 5, "authorize_endpoint" => "http://www.example.org/authorize", "token_endpoint" => "http://www.example.org/token"),
                 "client_secret must be a non-empty string or null"
+            ),
+            array(
+              array ("client_id" => "foo", "client_secret" => "bar", "authorize_endpoint" => "http://www.example.org/authorize", "token_endpoint" => "http://www.example.org/token", "default_token_type" => ''),
+                "default_token_type must be a non-empty string or null"
             ),
 
         );

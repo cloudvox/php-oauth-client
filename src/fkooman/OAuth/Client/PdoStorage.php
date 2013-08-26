@@ -17,10 +17,11 @@
 
 namespace fkooman\OAuth\Client;
 
-use \PDO as PDO;
+use PDO;
 
 class PdoStorage implements StorageInterface
 {
+    /** @var PDO */
     private $db;
 
     public function __construct(PDO $db)
@@ -28,17 +29,22 @@ class PdoStorage implements StorageInterface
         $this->db = $db;
     }
 
-    public function getAccessToken($clientConfigId, $userId, $scope)
+    public function getAccessToken($clientConfigId, Context $context)
     {
         $stmt = $this->db->prepare("SELECT * FROM access_tokens WHERE client_config_id = :client_config_id AND user_id = :user_id AND scope = :scope");
         $stmt->bindValue(":client_config_id", $clientConfigId, PDO::PARAM_STR);
-        $stmt->bindValue(":user_id", $userId, PDO::PARAM_STR);
-        $stmt->bindValue(":scope", $scope, PDO::PARAM_STR);
+        $stmt->bindValue(":user_id", $context->getUserId(), PDO::PARAM_STR);
+        $stmt->bindValue(":scope", $context->getScope()->isEmptyScope() ? null : $context->getScope()->getScopeAsString(), PDO::PARAM_STR);
         $stmt->execute();
 
         $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        if (false !== $result) {
+            $result['scope'] = new Scope($result['scope']);
 
-        return (false !== $result) ? new AccessToken($result) : false;
+            return new AccessToken($result);
+        }
+
+        return false;
     }
 
     public function storeAccessToken(AccessToken $accessToken)
@@ -46,7 +52,7 @@ class PdoStorage implements StorageInterface
         $stmt = $this->db->prepare("INSERT INTO access_tokens (client_config_id, user_id, scope, access_token, token_type, expires_in, issue_time) VALUES(:client_config_id, :user_id, :scope, :access_token, :token_type, :expires_in, :issue_time)");
         $stmt->bindValue(":client_config_id", $accessToken->getClientConfigId(), PDO::PARAM_STR);
         $stmt->bindValue(":user_id", $accessToken->getUserId(), PDO::PARAM_STR);
-        $stmt->bindValue(":scope", $accessToken->getScope(), PDO::PARAM_STR);
+        $stmt->bindValue(":scope", $accessToken->getScope()->isEmptyScope() ? null : $accessToken->getScope()->getScopeAsString(), PDO::PARAM_STR);
         $stmt->bindValue(":access_token", $accessToken->getAccessToken(), PDO::PARAM_STR);
         $stmt->bindValue(":token_type", $accessToken->getTokenType(), PDO::PARAM_STR);
         $stmt->bindValue(":expires_in", $accessToken->getExpiresIn(), PDO::PARAM_INT);
@@ -68,17 +74,22 @@ class PdoStorage implements StorageInterface
         return 1 === $stmt->rowCount();
     }
 
-    public function getRefreshToken($clientConfigId, $userId, $scope)
+    public function getRefreshToken($clientConfigId, Context $context)
     {
         $stmt = $this->db->prepare("SELECT * FROM refresh_tokens WHERE client_config_id = :client_config_id AND user_id = :user_id AND scope = :scope");
         $stmt->bindValue(":client_config_id", $clientConfigId, PDO::PARAM_STR);
-        $stmt->bindValue(":user_id", $userId, PDO::PARAM_STR);
-        $stmt->bindValue(":scope", $scope, PDO::PARAM_STR);
+        $stmt->bindValue(":user_id", $context->getUserId(), PDO::PARAM_STR);
+        $stmt->bindValue(":scope", $context->getScope()->isEmptyScope() ? null : $context->getScope()->getScopeAsString(), PDO::PARAM_STR);
         $stmt->execute();
 
         $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        if (false !== $result) {
+            $result['scope'] = new Scope($result['scope']);
 
-        return (false !== $result) ? new RefreshToken($result) : false;
+            return new RefreshToken($result);
+        }
+
+        return false;
     }
 
     public function storeRefreshToken(RefreshToken $refreshToken)
@@ -86,7 +97,7 @@ class PdoStorage implements StorageInterface
         $stmt = $this->db->prepare("INSERT INTO refresh_tokens (client_config_id, user_id, scope, refresh_token, issue_time) VALUES(:client_config_id, :user_id, :scope, :refresh_token, :issue_time)");
         $stmt->bindValue(":client_config_id", $refreshToken->getClientConfigId(), PDO::PARAM_STR);
         $stmt->bindValue(":user_id", $refreshToken->getUserId(), PDO::PARAM_STR);
-        $stmt->bindValue(":scope", $refreshToken->getScope(), PDO::PARAM_STR);
+        $stmt->bindValue(":scope", $refreshToken->getScope()->isEmptyScope() ? null : $refreshToken->getScope()->getScopeAsString(), PDO::PARAM_STR);
         $stmt->bindValue(":refresh_token", $refreshToken->getRefreshToken(), PDO::PARAM_STR);
         $stmt->bindValue(":issue_time", $refreshToken->getIssueTime(), PDO::PARAM_INT);
 
@@ -114,8 +125,13 @@ class PdoStorage implements StorageInterface
         $stmt->execute();
 
         $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        if (false !== $result) {
+            $result['scope'] = new Scope($result['scope']);
 
-        return (false !== $result) ? new State($result) : false;
+            return new State($result);
+        }
+
+        return false;
     }
 
     public function storeState(State $state)
@@ -123,7 +139,7 @@ class PdoStorage implements StorageInterface
         $stmt = $this->db->prepare("INSERT INTO states (client_config_id, user_id, scope, issue_time, state) VALUES(:client_config_id, :user_id, :scope, :issue_time, :state)");
         $stmt->bindValue(":client_config_id", $state->getClientConfigId(), PDO::PARAM_STR);
         $stmt->bindValue(":user_id", $state->getUserId(), PDO::PARAM_STR);
-        $stmt->bindValue(":scope", $state->getScope(), PDO::PARAM_STR);
+        $stmt->bindValue(":scope", $state->getScope()->isEmptyScope() ? null : $state->getScope()->getScopeAsString(), PDO::PARAM_STR);
         $stmt->bindValue(":issue_time", $state->getIssueTime(), PDO::PARAM_INT);
         $stmt->bindValue(":state", $state->getState(), PDO::PARAM_STR);
         $stmt->execute();
@@ -131,11 +147,11 @@ class PdoStorage implements StorageInterface
         return 1 === $stmt->rowCount();
     }
 
-    public function deleteStateForUser($clientConfigId, $userId)
+    public function deleteStateForContext($clientConfigId, Context $context)
     {
         $stmt = $this->db->prepare("DELETE FROM states WHERE client_config_id = :client_config_id AND user_id = :user_id");
         $stmt->bindValue(":client_config_id", $clientConfigId, PDO::PARAM_STR);
-        $stmt->bindValue(":user_id", $userId, PDO::PARAM_STR);
+        $stmt->bindValue(":user_id", $context->getUserId(), PDO::PARAM_STR);
         $stmt->execute();
 
         return 1 === $stmt->rowCount();

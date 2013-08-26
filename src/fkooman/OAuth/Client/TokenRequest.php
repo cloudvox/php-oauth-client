@@ -64,14 +64,17 @@ class TokenRequest
         }
 
         try {
-            $response = $this->c->post($this->clientConfig->getTokenEndpoint())->addPostFields($p)->send();
-            // FIXME: what if no JSON?
-            return TokenResponse::fromArray($response->json());
+            $responseData = $this->c->post($this->clientConfig->getTokenEndpoint())->addPostFields($p)->send()->json();
+
+            // some servers do not provide token_type, so we allow for setting a default
+            if (null !== $this->clientConfig->getDefaultTokenType()) {
+                if (is_array($responseData) && !isset($responseData['token_type'])) {
+                    $responseData['token_type'] = $this->clientConfig->getDefaultTokenType();
+                }
+            }
+
+            return new TokenResponse($responseData);
         } catch (\Guzzle\Http\Exception\ClientErrorResponseException $e) {
-            echo $e->getMessage();
-            // FIXME: if authorization code request fails? What should we do then?!
-            // whenever there is 4xx error, we return FALSE, if some other error
-            // occurs we just pass along the Exception...
             return false;
         }
     }

@@ -64,23 +64,21 @@ class Api
 
     public function getRefreshToken(Context $context)
     {
-        return $this->tokenStorage->getRefreshToken($this->clientConfigId, $context->getUserId(), $context->getScope());
+        return $this->tokenStorage->getRefreshToken($this->clientConfigId, $context);
     }
 
     public function getAccessToken(Context $context)
     {
         // do we have a valid access token?
-        $accessToken = $this->tokenStorage->getAccessToken($this->clientConfigId, $context->getUserId(), $context->getScope());
+        $accessToken = $this->tokenStorage->getAccessToken($this->clientConfigId, $context);
         if (false !== $accessToken) {
             // check if expired
-            if ($accessToken->getIssueTime() + $accessToken->getExpiresIn() < time()) {
-                // expired, delete it
-                $this->tokenStorage->deleteAccessToken($accessToken);
-
-                return false;
+            if (time() < $accessToken->getIssueTime() + $accessToken->getExpiresIn()) {
+                // not expired
+                return $accessToken;
             }
-
-            return $accessToken;
+            // expired, delete it and continue
+            $this->tokenStorage->deleteAccessToken($accessToken);
         }
 
         // no valid access token, is there a refresh_token?
@@ -95,8 +93,22 @@ class Api
 
                 return false;
             }
-            // we got a new token
-            $scope = (null !== $tokenResponse->getScope()) ? $tokenResponse->getScope() : $context->getScope();
+
+            if (null === $tokenResponse->getScope()) {
+                // no scope in response, we assume we got the requested scope
+                $scope = $context->getScope();
+            } else {
+                // the scope we got should be a superset of what we requested
+                $scope = $tokenResponse->getScope();
+                if (!$scope->hasScope($context->getScope())) {
+                    // we didn't get the scope we requested, stop for now
+                    // FIXME: we need to implement a way to request certain
+                    // scope as being optional, while others need to be
+                    // required
+                    throw new ApiException("requested scope not obtained");
+                }
+            }
+
             $accessToken = new AccessToken(
                 array(
                     "client_config_id" => $this->clientConfigId,
@@ -157,7 +169,7 @@ class Api
         }
 
         // try to get a new access token
-        $this->tokenStorage->deleteStateForUser($this->clientConfigId, $context->getUserId());
+        $this->tokenStorage->deleteStateForContext($this->clientConfigId, $context);
         $state = new State(
             array(
                 "client_config_id" => $this->clientConfigId,
@@ -176,9 +188,14 @@ class Api
             "response_type" => "code",
             "state" => $state->getState(),
         );
-        if (null !== $context->getScope()) {
-            $q['scope'] = $context->getScope();
+
+        // scope
+        $contextScope = $context->getScope();
+        if (!$contextScope->isEmptyScope()) {
+            $q['scope'] = $contextScope->getScopeAsString();
         }
+
+        // redirect_uri
         if ($this->clientConfig->getRedirectUri()) {
             $q['redirect_uri'] = $this->clientConfig->getRedirectUri();
         }
