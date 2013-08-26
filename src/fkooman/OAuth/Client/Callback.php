@@ -23,6 +23,7 @@ class Callback
     private $clientConfig;
     private $tokenStorage;
     private $httpClient;
+    private $tokenResponse;
 
     public function __construct($clientConfigId, ClientConfigInterface $clientConfig, StorageInterface $tokenStorage, \Guzzle\Http\Client $httpClient)
     {
@@ -88,6 +89,8 @@ class Callback
             if (false === $tokenResponse) {
                 throw new CallbackException("unable to fetch access token with authorization code");
             }
+
+            $this->tokenResponse = $tokenResponse->getResponsebody();
 
             // if response contains a granted scope use that, if not we assume
             // we got what we asked for, take it from the state object
