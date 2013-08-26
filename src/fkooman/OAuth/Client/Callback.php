@@ -56,6 +56,11 @@ class Callback
         $this->httpClient = $httpClient;
     }
 
+    public function getTokenResponse()
+    {
+        return $this->tokenResponse;
+    }
+
     public function handleCallback(array $query)
     {
         $qState = isset($query['state']) ? $query['state'] : null;
