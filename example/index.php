@@ -17,7 +17,7 @@ $tokenStorage = new \fkooman\OAuth\Client\SessionStorage();
 $httpClient = new \Guzzle\Http\Client();
 $api = new fkooman\OAuth\Client\Api("foo", $clientConfig, $tokenStorage, $httpClient);
 
-$context = new \fkooman\OAuth\Client\Context("john.doe@example.org", array("authorizations"));
+$context = new \fkooman\OAuth\Client\Context("john.doe@example.org", new \fkooman\OAuth\Client\Scope("authorizations"));
 
 $accessToken = $api->getAccessToken($context);
 if (false === $accessToken) {

@@ -28,6 +28,7 @@ class ClientConfig implements ClientConfigInterface
     private $clientSecret;
     private $redirectUri;
     private $credentialsInRequestBody;
+    private $defaultTokenType;
     private $enableDebug;
 
     public function __construct(array $data)
@@ -49,6 +50,9 @@ class ClientConfig implements ClientConfigInterface
 
         $credentialsInRequestBody = array_key_exists('credentials_in_request_body', $data) ? $data['credentials_in_request_body'] : false;
         $this->setCredentialsInRequestBody($credentialsInRequestBody);
+
+        $defaultTokenType = array_key_exists('default_token_type', $data) ? $data['default_token_type'] : null;
+        $this->setDefaultTokenType($defaultTokenType);
 
         $enableDebug = array_key_exists('enable_debug', $data) ? $data['enable_debug'] : false;
         $this->setEnableDebug($enableDebug);
@@ -127,6 +131,21 @@ class ClientConfig implements ClientConfigInterface
     public function getCredentialsInRequestBody()
     {
         return $this->credentialsInRequestBody;
+    }
+
+    public function setDefaultTokenType($defaultTokenType)
+    {
+        if (null !== $defaultTokenType) {
+            if (!is_string($defaultTokenType) || 0 >= strlen($defaultTokenType)) {
+                throw new ClientConfigException("default_token_type must be a non-empty string or null");
+            }
+        }
+        $this->defaultTokenType = $defaultTokenType;
+    }
+
+    public function getDefaultTokenType()
+    {
+        return $this->defaultTokenType;
     }
 
     public function setEnableDebug($enableDebug)
