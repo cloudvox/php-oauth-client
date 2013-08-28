@@ -113,6 +113,8 @@ class Callback
                 }
             }
 
+            $this->tokenResponse = $tokenResponse;
+
             // store the access token
             $accessToken = new AccessToken(
                 array(
