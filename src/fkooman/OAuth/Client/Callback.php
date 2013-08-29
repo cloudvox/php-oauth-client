@@ -23,6 +23,7 @@ class Callback
     private $clientConfig;
     private $tokenStorage;
     private $httpClient;
+    private $tokenResponse;
 
     public function __construct($clientConfigId, ClientConfigInterface $clientConfig, StorageInterface $tokenStorage, \Guzzle\Http\Client $httpClient)
     {
@@ -53,6 +54,11 @@ class Callback
     public function setHttpClient(\Guzzle\Http\Client $httpClient)
     {
         $this->httpClient = $httpClient;
+    }
+
+    public function getTokenResponse()
+    {
+        return $this->tokenResponse;
     }
 
     public function handleCallback(array $query)
@@ -106,6 +112,8 @@ class Callback
                     throw new CallbackException("requested scope not obtained");
                 }
             }
+
+            $this->tokenResponse = $tokenResponse;
 
             // store the access token
             $accessToken = new AccessToken(

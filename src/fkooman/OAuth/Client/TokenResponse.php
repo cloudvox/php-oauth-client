@@ -25,6 +25,8 @@ class TokenResponse
     private $expiresIn;
     private $refreshToken;
     private $scope;
+    private $responseBody;
+
 
     public function __construct(array $data)
     {
@@ -48,6 +50,8 @@ class TokenResponse
         if (array_key_exists('scope', $data)) {
             $this->setScope($data['scope']);
         }
+
+        $this->setResponseBody($data);
     }
 
     public function setAccessToken($accessToken)
@@ -113,5 +117,15 @@ class TokenResponse
     public function getScope()
     {
         return $this->scope;
+    }
+
+    public function setResponseBody($responseBody)
+    {
+        $this->responseBody = $responseBody;
+    }
+
+    public function getResponseBody()
+    {
+        return $this->responseBody;
     }
 }
