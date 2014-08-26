@@ -127,7 +127,7 @@ class Api
                         "client_config_id" => $this->clientConfigId,
                         "user_id" => $context->getUserId(),
                         "scope" => $scope,
-                        "refresh_token" => $tokenResponse->getRefreshTokenToken(),
+                        "refresh_token" => $tokenResponse->getRefreshToken(),
                         "issue_time" => time()
                     )
                 );
