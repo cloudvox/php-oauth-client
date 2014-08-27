@@ -122,6 +122,8 @@ class Api
             );
             $this->tokenStorage->storeAccessToken($accessToken);
             if (null !== $tokenResponse->getRefreshToken()) {
+                // delete the existing refresh token as we'll store a new one
+                $this->tokenStorage->deleteRefreshToken($refreshToken);
                 $refreshToken = new RefreshToken(
                     array(
                         "client_config_id" => $this->clientConfigId,
