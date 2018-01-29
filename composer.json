@@ -17,7 +17,7 @@
     "require": {
         "ext-openssl": "*", 
         "guzzle/guzzle": "3.7.*", 
-        "monolog/monolog": "1.6.*", 
+        "monolog/monolog": "1.17.*", 
         "php": ">=5.3.3"
     }
 }
